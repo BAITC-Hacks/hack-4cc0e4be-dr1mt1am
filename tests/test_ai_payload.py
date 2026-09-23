@@ -24,12 +24,21 @@ class AIPayloadTests(unittest.TestCase):
 
     def test_reference_payload_scores_and_budget(self):
         payload = build_analysis_payload(self.result)
-        self.assertAlmostEqual(payload["score_before"], 52.55768, places=10)
-        self.assertAlmostEqual(payload["score_after"], 56.54307, places=10)
-        self.assertAlmostEqual(payload["score_delta"], 3.98539, places=10)
+        self.assertEqual(payload["score_before"], 52.56)
+        self.assertEqual(payload["score_after"], 56.54)
+        self.assertEqual(payload["score_delta"], 3.99)
         self.assertEqual(payload["budget_used"], 95)
         self.assertEqual(payload["budget_remaining"], 5)
         self.assertEqual((payload["n_crit_before"], payload["n_crit_after"]), (2, 0))
+        for name in ("budget_used", "budget_remaining", "n_crit_before", "n_crit_after"):
+            self.assertIs(type(payload[name]), int)
+
+    def test_reference_district_and_indicator_values_are_rounded(self):
+        payload = build_analysis_payload(self.result)
+        self.assertEqual(payload["district_score_changes"]["Nura"], 3.78)
+        self.assertEqual(payload["district_score_changes"]["Saryarka"], 1.65)
+        self.assertEqual(payload["indicator_changes"]["Esil"]["C2"], 4.38)
+        self.assertEqual(payload["indicators_after"]["Esil"]["C2"], 74.38)
 
     def test_reference_selected_initiatives_and_targets(self):
         selected = build_analysis_payload(self.result)["selected_initiatives"]
@@ -49,7 +58,7 @@ class AIPayloadTests(unittest.TestCase):
             "bonuses": [{"indicator": "B1", "delta": 2}],
         }])
 
-    def test_all_required_facts_are_copied_exactly(self):
+    def test_all_required_facts_are_preserved_within_display_precision(self):
         payload = build_analysis_payload(self.result)
         fields = (
             "score_before", "score_after", "score_delta", "budget_used", "budget_remaining",
@@ -58,8 +67,20 @@ class AIPayloadTests(unittest.TestCase):
             "d_avg_before", "d_avg_after", "weakest_district_before", "weakest_district_after",
             "min_district_score_before", "min_district_score_after", "n_crit_before", "n_crit_after",
         )
+        def assert_presentation_copy(actual, original):
+            self.assertIs(type(actual), type(original))
+            if isinstance(original, dict):
+                self.assertEqual(set(actual), set(original))
+                for key in original:
+                    assert_presentation_copy(actual[key], original[key])
+            elif isinstance(original, float):
+                self.assertLessEqual(abs(actual - original), 0.005 + 1e-12)
+            else:
+                self.assertEqual(actual, original)
+
         for name in fields:
-            self.assertEqual(payload[name], getattr(self.result, name), name)
+            with self.subTest(field=name):
+                assert_presentation_copy(payload[name], getattr(self.result, name))
 
     def test_payload_does_not_recompute_scores_or_changes(self):
         supplied = replace(
@@ -69,11 +90,11 @@ class AIPayloadTests(unittest.TestCase):
         )
         with patch("engine.scoring.calculate_final_score", side_effect=AssertionError("No scoring in AI")):
             payload = build_analysis_payload(supplied)
-        self.assertEqual(payload["score_before"], 11.123456789)
-        self.assertEqual(payload["score_after"], 22.87654321)
-        self.assertEqual(payload["score_delta"], 7.23456789)
-        self.assertEqual(payload["district_score_changes"], {"Nura": 99.125})
-        self.assertEqual(payload["indicator_changes"], {"Nura": {"S1": 2.3456789}})
+        self.assertEqual(payload["score_before"], 11.12)
+        self.assertEqual(payload["score_after"], 22.88)
+        self.assertEqual(payload["score_delta"], 7.23)
+        self.assertEqual(payload["district_score_changes"], {"Nura": 99.12})
+        self.assertEqual(payload["indicator_changes"], {"Nura": {"S1": 2.35}})
 
     def test_new_explanation_facts_are_calculated_by_engine(self):
         self.assertAlmostEqual(self.result.district_score_changes["Nura"], 3.7825, places=10)
@@ -90,14 +111,25 @@ class AIPayloadTests(unittest.TestCase):
         self.assertEqual(metadata["T2"]["name"], "Public transport accessibility")
         self.assertTrue(all(item["higher_is_better"] for item in metadata.values()))
 
-    def test_payload_is_json_serializable_without_rounding(self):
+    def test_payload_json_has_no_long_float_artifacts(self):
         payload = build_analysis_payload(self.result)
-        self.assertEqual(json.loads(json.dumps(payload, allow_nan=False)), payload)
+        serialized = json.dumps(payload, allow_nan=False)
+        self.assertNotRegex(serialized, r"\d+\.\d{3,}")
+        self.assertEqual(json.loads(serialized), payload)
+
+    def test_display_rounding_handles_negative_changes_and_zero(self):
+        supplied = replace(self.result, indicator_changes={"Nura": {"S1": -2.34567, "S2": -0.00001}})
+        payload = build_analysis_payload(supplied)
+        self.assertEqual(payload["indicator_changes"], {"Nura": {"S1": -2.35, "S2": 0.0}})
+        self.assertNotIn("-0.0", json.dumps(payload))
 
     def test_payload_build_does_not_mutate_simulation(self):
         before = deepcopy(asdict(self.result))
         build_analysis_payload(self.result)
         self.assertEqual(asdict(self.result), before)
+        self.assertAlmostEqual(self.result.score_after, 56.54307, places=10)
+        self.assertAlmostEqual(self.result.score_delta, 3.98539, places=10)
+        self.assertAlmostEqual(self.result.district_score_changes["Nura"], 3.7825, places=10)
 
     def test_payload_mutation_cannot_change_simulation(self):
         before = deepcopy(asdict(self.result))

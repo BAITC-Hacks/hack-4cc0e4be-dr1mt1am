@@ -62,6 +62,8 @@ class AIAnalyzerTests(unittest.TestCase):
         client.responses.create.assert_called_once()
         args = client.responses.create.call_args.kwargs
         self.assertEqual(json.loads(args["input"][0]["content"]), build_analysis_payload(self.result))
+        self.assertEqual(json.loads(args["input"][0]["content"])["score_delta"], 3.99)
+        self.assertEqual(json.loads(args["input"][0]["content"])["score_after"], 56.54)
         self.assertEqual(args["instructions"], ANALYSIS_INSTRUCTIONS)
         self.assertEqual(args["model"], "gpt-5.6-terra")
         self.assertEqual(args["text"]["format"]["type"], "json_schema")
@@ -73,6 +75,46 @@ class AIAnalyzerTests(unittest.TestCase):
     def test_output_schema_contains_only_explanation_fields(self):
         self.assertEqual(set(ANALYSIS_SCHEMA["properties"]), set(EXPLANATION))
         self.assertEqual(set(ANALYSIS_SCHEMA["required"]), set(EXPLANATION))
+
+    def test_prompt_defines_critical_indicator_pairs_not_districts(self):
+        prompt = " ".join(ANALYSIS_INSTRUCTIONS.split())
+        for requirement in (
+            "N_crit — количество пар «район × показатель»",
+            "строго меньше 40 (< 40)",
+            "а не количество районов",
+            "«критические показатели» или «показатели в критической зоне»",
+            "Никогда не называй их «критические районы»",
+            "Используй готовые n_crit_before и n_crit_after; не пересчитывай их",
+        ):
+            with self.subTest(requirement=requirement):
+                self.assertIn(requirement, prompt)
+
+    def test_prompt_preserves_five_initiatives_when_recommending_budget_changes(self):
+        prompt = " ".join(ANALYSIS_INSTRUCTIONS.split())
+        for requirement in (
+            "В сценарии должно быть ровно 5 инициатив",
+            "budget_remaining не позволяет добавить шестую",
+            "Не советуй «потратить остаток бюджета», «добавить ещё одну инициативу»",
+            "альтернативный набор из пяти инициатив",
+            "заменить одну из выбранных мер",
+            "перераспределить бюджет в следующем сценарии",
+            "проверить альтернативу через simulation engine",
+            "Никогда не обещай гарантированного улучшения Score",
+        ):
+            with self.subTest(requirement=requirement):
+                self.assertIn(requirement, prompt)
+
+    def test_prompt_does_not_invent_other_critical_thresholds(self):
+        prompt = " ".join(ANALYSIS_INSTRUCTIONS.split())
+        for requirement in (
+            "При значении >= 40 показатель не является критическим",
+            "Не вводи собственного официального порога «низкого показателя»",
+            "единственный критический порог — < 40",
+            "«остаётся одним из слабых показателей» или «остаётся относительно низким»",
+            "только если это подтверждается сравнением входных данных",
+        ):
+            with self.subTest(requirement=requirement):
+                self.assertIn(requirement, prompt)
 
     def test_analysis_does_not_mutate_result(self):
         before = deepcopy(asdict(self.result))

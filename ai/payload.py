@@ -1,6 +1,5 @@
 """Serialize simulator facts, without recalculating scores, deltas, or budgets."""
 
-from copy import deepcopy
 from dataclasses import asdict
 from typing import Any
 
@@ -8,6 +7,18 @@ from engine.data import INDICATORS
 from engine.models import SimulationResult
 
 from .models import InvalidSimulationError
+
+
+def _presentation_copy(value: Any) -> Any:
+    """Copy JSON data, rounding floats only at the LLM presentation boundary."""
+    if isinstance(value, float):
+        rounded = round(value, 2)
+        return 0.0 if rounded == 0 else rounded
+    if isinstance(value, dict):
+        return {key: _presentation_copy(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_presentation_copy(item) for item in value]
+    return value
 
 
 def build_analysis_payload(result: SimulationResult) -> dict[str, Any]:
@@ -24,7 +35,7 @@ def build_analysis_payload(result: SimulationResult) -> dict[str, Any]:
     if any(getattr(result, name) is None for name in fact_fields) or not result.selected_initiatives:
         raise InvalidSimulationError("Результат симуляции неполный; выполните симуляцию заново.")
 
-    payload = {name: deepcopy(getattr(result, name)) for name in fact_fields}
+    payload = {name: getattr(result, name) for name in fact_fields}
     payload["selected_initiatives"] = [
         {
             "id": item.initiative.id,
@@ -49,4 +60,4 @@ def build_analysis_payload(result: SimulationResult) -> dict[str, Any]:
         key: {"name": item.name, "direction": item.direction.value, "higher_is_better": item.higher_is_better}
         for key, item in INDICATORS.items()
     }
-    return payload
+    return _presentation_copy(payload)
