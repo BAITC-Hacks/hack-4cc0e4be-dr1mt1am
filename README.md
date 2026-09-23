@@ -34,3 +34,18 @@ Unit tests работают без сети и не выполняют реал�
 ```powershell
 python -B -m unittest discover -s tests
 ```
+
+## Optional features
+
+The `features` package is deliberately independent from the simulation core:
+
+- `features.events` applies unexpected events and optional responses without mutating a simulation result.
+- `features.events.DEFAULT_EVENTS` contains four ready-to-demo event definitions.
+- `features.comparison` converts scored scenarios into stable table rows for a UI or API.
+- `features.optimization` exhaustively evaluates valid decision combinations through injected `validator`, `simulator`, and `scorer` callbacks.
+
+Run the focused tests with:
+
+```powershell
+python -m unittest discover -s tests -v
+```
