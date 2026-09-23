@@ -1,6 +1,6 @@
 # Implementation roadmap
 
-Current status: typed models, static data, validation, deterministic simulation, scoring, and the AI explanation adapter are implemented and tested. AI tests are offline; live answer quality and model access have not been evaluated. Baseline Score is 52.55768; the reference scenario Score is 56.54307. The user explicitly confirmed subtraction of the critical penalty on 2026-09-23; see ARCHITECTURE.md for the clarification. PROJECT_SPEC.md is unchanged as requested. UI integration and scenario comparison remain future tasks.
+Current status: typed models, static data, validation, deterministic simulation, scoring, AI explanation, and the React/Vite frontend with FastAPI integration are implemented. The user confirmed a successful live AI smoke test; automated tests remain offline. Baseline Score is 52.55768; the reference scenario Score is 56.54307. The user explicitly confirmed subtraction of the critical penalty on 2026-09-23; see ARCHITECTURE.md for the clarification. PROJECT_SPEC.md is unchanged as requested. Visual review on target desktop sizes and comparison of separate scenarios remain future tasks.
 
 ## Phase 1 — Core simulation
 
@@ -35,14 +35,18 @@ Current status: typed models, static data, validation, deterministic simulation,
 
 ## Phase 3 — UI
 
-* [ ] Scenario builder
-* [ ] Initiative selector
-* [ ] District selector
-* [ ] Budget counter
-* [ ] Validation feedback
-* [ ] Before/after visualization
-* [ ] Score visualization
-* [ ] District comparison
+* [x] Scenario builder
+* [x] Initiative selector
+* [x] District selector
+* [x] Budget counter
+* [x] Validation feedback
+* [x] Before/after visualization
+* [x] Score visualization
+* [x] District comparison
+* [x] Explicit AI analysis with loading/error states
+* [x] Session state, edit invalidation, demo preset and reset
+* [x] Offline API/client tests and React reference-result rendering verification
+* [ ] Visual browser review at 1366×768 and 1920×1080
 
 ## Phase 4 — AI
 

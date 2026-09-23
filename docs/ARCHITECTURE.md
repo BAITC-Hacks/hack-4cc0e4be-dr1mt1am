@@ -9,7 +9,7 @@ Decision[]
 -> SimulationResult
 -> analyze_simulation
 -> AIAnalysis
--> UI (future integration)
+-> UI (React/Vite via FastAPI)
 ```
 
 | Component / expected location | Responsibility |
@@ -34,7 +34,7 @@ Decision[]
 - In a synergy pair, the first initiative is the first member listed in the specification, independent of user selection order.
 - Use the explicitly confirmed scoring clarification below; preserve the supplied regression targets.
 
-Typed domain models, static data, validation, simulation, scoring, and AI explanation are implemented and tested. `validate_scenario(decisions: Sequence[Decision]) -> ValidationResult` returns Russian error messages with stable codes, plus budget used/remaining (both `None` for unknown initiative IDs). Repeated selections each count toward cost and direction limits. Errors are deduplicated and sorted by code and message, independent of decision order. UI remains unimplemented.
+Typed domain models, static data, validation, simulation, scoring, and AI explanation are implemented and tested. `validate_scenario(decisions: Sequence[Decision]) -> ValidationResult` returns Russian error messages with stable codes, plus budget used/remaining (both `None` for unknown initiative IDs). Repeated selections each count toward cost and direction limits. Errors are deduplicated and sorted by code and message, independent of decision order. The React/Vite UI calls the existing engine through the FastAPI adapter.
 
 ## Simulation API
 
@@ -60,11 +60,11 @@ The supplied specification's `* 1.0 * N_crit` line was inconsistent with its sta
 
 `analyze_simulation(result: SimulationResult, client: OpenAI | None = None) -> AIAnalysis` uses OpenAI Responses API with a strict JSON Schema in `text.format`. The output is a frozen dataclass with `summary: str` and `strengths`, `risks`, `tradeoffs`, `recommendations: list[str]`. It has no numeric Score, budget, or indicator fields. Completed JSON is checked for exact keys and types; refusal, incomplete output, and invalid output are errors, never fabricated fallback explanations.
 
-The prompt requests Russian explanations, separates simulator facts from interpretation and recommendations, prohibits new numerical calculations or forecasts, and treats payload strings as data. Structured Outputs constrain shape, not factual correctness; live answer quality still needs evaluation before presentation to users. Recommendations require a new engine run before any numerical outcome can be stated. Scenario comparison is not implemented.
+The prompt requests Russian explanations, separates simulator facts from interpretation and recommendations, prohibits new numerical calculations or forecasts, and treats payload strings as data. Structured Outputs constrain shape, not factual correctness; the user confirmed that live smoke-test answer quality is suitable for the demo. Recommendations require a new engine run before any numerical outcome can be stated. Scenario comparison is not implemented.
 
 Configuration and dependencies:
 
-- Install the single direct dependency with `.venv\Scripts\python.exe -m pip install -r requirements.txt`. The tested SDK is pinned to `openai==3.19.0`.
+- Install dependencies with `.venv\Scripts\python.exe -m pip install -r requirements.txt`. The AI SDK is pinned to `openai==3.19.0`; the HTTP adapter uses FastAPI and Uvicorn; React dependencies live in `ui/package.json`.
 - Set `OPENAI_API_KEY` in the process environment. The analyzer never writes or logs it. `.env` is ignored by Git but is not automatically loaded.
 - `OPENAI_MODEL` overrides the requested default `gpt-5.6-terra`. Availability and Structured Outputs support for the chosen model must be checked with the deployment account; no live API request was made during implementation.
 - A client supplied by the caller controls its credentials and lifecycle. The analyzer creates and closes its own client only when none is supplied, using a 30-second timeout and no automatic retries.
@@ -80,7 +80,7 @@ Errors for UI handling (all inherit `AIAnalysisError`):
 
 Provider response bodies and raw exception messages are not exposed in these errors. Unexpected programming exceptions propagate. Tests use fake clients and the real SDK with an in-memory transport; AI tests block socket connections and spend no API credits.
 
-Future UI usage (this example makes a real request only when explicitly executed with configuration):
+UI integration pattern (this example makes a real request only when explicitly executed with configuration):
 
 ```python
 from ai.analyzer import analyze_simulation
@@ -98,6 +98,13 @@ if result.valid:
         explanation = analysis.summary
 ```
 
-The frontend still needs explicit request triggering, loading/error states, and rendering of the five explanation fields alongside simulator numbers. No frontend files are changed here.
+## Frontend launch
+
+The final interface is React/Vite in `ui/src/`, served separately from the FastAPI
+adapter. Start the backend with `python -m uvicorn api.app:app --reload --port 8000`
+and the frontend with `cd ui`, `npm ci`, `npm run dev` in a second terminal.
+See [README](../README.md) for environment setup and
+[API contract](../api/README.md) for catalog, simulation and analysis endpoints.
+`OPENAI_API_KEY` belongs only in the Python backend environment.
 
 Documentation was checked against the official [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs) and [Responses Python reference](https://developers.openai.com/api/reference/python/resources/responses/methods/create). OpenAI Developer Docs MCP was not available in the session; official web documentation and the installed SDK signature were used instead.
