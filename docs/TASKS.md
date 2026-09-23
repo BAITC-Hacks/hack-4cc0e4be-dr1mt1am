@@ -1,6 +1,6 @@
 # Implementation roadmap
 
-Current status: typed models, static data, validation, deterministic simulation, and scoring are implemented and tested. Baseline Score is 52.55768; the reference scenario Score is 56.54307. The user explicitly confirmed subtraction of the critical penalty on 2026-09-23; see ARCHITECTURE.md for the clarification. PROJECT_SPEC.md is unchanged as requested. UI and AI remain unimplemented and require a separate task.
+Current status: typed models, static data, validation, deterministic simulation, scoring, and the AI explanation adapter are implemented and tested. AI tests are offline; live answer quality and model access have not been evaluated. Baseline Score is 52.55768; the reference scenario Score is 56.54307. The user explicitly confirmed subtraction of the critical penalty on 2026-09-23; see ARCHITECTURE.md for the clarification. PROJECT_SPEC.md is unchanged as requested. UI integration and scenario comparison remain future tasks.
 
 ## Phase 1 — Core simulation
 
@@ -46,12 +46,12 @@ Current status: typed models, static data, validation, deterministic simulation,
 
 ## Phase 4 — AI
 
-* [ ] Structured SimulationResult payload for AI
-* [ ] Scenario explanation
-* [ ] Strengths
-* [ ] Risks
-* [ ] Trade-offs
-* [ ] Recommendations
+* [x] Structured SimulationResult payload for AI
+* [x] Scenario explanation
+* [x] Strengths
+* [x] Risks
+* [x] Trade-offs
+* [x] Recommendations
 * [ ] Scenario comparison
 
 ## Phase 5 — Optional hackathon features

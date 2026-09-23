@@ -122,6 +122,14 @@ class TriggeredSynergy:
 
 
 @dataclass(frozen=True)
+class SelectedInitiative:
+    """A validated decision with its authoritative catalog record."""
+
+    decision: Decision
+    initiative: Initiative
+
+
+@dataclass(frozen=True)
 class SimulationResult:
     """Calculated snapshots; invalid scenarios have no simulation or score values."""
 
@@ -145,3 +153,6 @@ class SimulationResult:
     score_after: float | None = None
     score_delta: float | None = None
     triggered_synergies: tuple[TriggeredSynergy, ...] = ()
+    selected_initiatives: tuple[SelectedInitiative, ...] | None = None
+    district_score_changes: DistrictScores | None = None
+    indicator_changes: DistrictIndicators | None = None

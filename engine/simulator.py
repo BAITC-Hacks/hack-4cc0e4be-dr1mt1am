@@ -7,7 +7,7 @@ from .constants import HORIZON_QUARTERS, INDICATOR_MAX, INDICATOR_MIN
 from .data import DISTRICTS, INITIATIVES, SYNERGIES
 from .models import (
     Decision, DistrictIndicators, DistrictName, IndicatorId, InitiativeType,
-    SimulationResult, TriggeredSynergy,
+    SelectedInitiative, SimulationResult, TriggeredSynergy,
 )
 from .validator import validate_scenario
 
@@ -62,6 +62,18 @@ def simulate_scenario(decisions: Sequence[Decision]) -> SimulationResult:
         score_after=score_after,
         score_delta=score_after - score_before,
         triggered_synergies=triggered,
+        selected_initiatives=tuple(
+            SelectedInitiative(decision, INITIATIVES[decision.initiative_id])
+            for decision in sorted(decisions, key=lambda item: item.initiative_id)
+        ),
+        district_score_changes={
+            district: scores_after[district] - scores_before[district]
+            for district in scores_before
+        },
+        indicator_changes={
+            district: {key: after[district][key] - value for key, value in values.items()}
+            for district, values in before.items()
+        },
     )
 
 
