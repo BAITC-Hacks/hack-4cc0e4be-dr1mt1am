@@ -1,6 +1,6 @@
 # Implementation roadmap
 
-Current status: typed domain models, static project data, and the scenario validator are implemented, with data integrity and validator tests. Next is simulation when requested; simulation, scoring, UI, and AI remain unimplemented. Add relevant Phase 2 tests alongside behavior changes. Resolve the scoring clarification in PROJECT_SPEC.md before implementing the final Score.
+Current status: typed models, static data, validation, deterministic simulation, and scoring are implemented and tested. Baseline Score is 52.55768; the reference scenario Score is 56.54307. The user explicitly confirmed subtraction of the critical penalty on 2026-09-23; see ARCHITECTURE.md for the clarification. PROJECT_SPEC.md is unchanged as requested. UI and AI remain unimplemented and require a separate task.
 
 ## Phase 1 — Core simulation
 
@@ -8,30 +8,30 @@ Current status: typed domain models, static project data, and the scenario valid
 * [x] Add baseline district data
 * [x] Add M1-M14 initiative data
 * [x] Implement scenario validator
-* [ ] Implement lag scaling
-* [ ] Implement district effects
-* [ ] Implement city-wide effects
-* [ ] Implement synergies
-* [ ] Implement clipping
-* [ ] Implement district scoring
-* [ ] Implement D_avg
-* [ ] Implement N_crit
-* [ ] Implement final Score
+* [x] Implement lag scaling
+* [x] Implement district effects
+* [x] Implement city-wide effects
+* [x] Implement synergies
+* [x] Implement clipping
+* [x] Implement district scoring
+* [x] Implement D_avg
+* [x] Implement N_crit
+* [x] Implement final Score
 
 ## Phase 2 — Tests
 
-* [ ] Baseline regression = 52.55768
-* [ ] Reference scenario ≈ 56.54307
+* [x] Baseline regression = 52.55768
+* [x] Reference scenario ≈ 56.54307
 * [x] Budget validation
 * [x] Decision count validation
 * [x] Duplicate validation
 * [x] Direction limit
 * [x] District/city target validation
 * [x] Incompatibility validation
-* [ ] Lag scaling tests
-* [ ] Synergy tests
-* [ ] Clipping tests
-* [ ] Order invariance test (validator covered, including all 120 reference permutations; simulation pending)
+* [x] Lag scaling tests
+* [x] Synergy tests
+* [x] Clipping tests
+* [x] Order invariance test (validator and full simulation, including all 120 reference permutations)
 
 ## Phase 3 — UI
 

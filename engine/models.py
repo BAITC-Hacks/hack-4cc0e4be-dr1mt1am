@@ -108,3 +108,40 @@ class ValidationResult:
     errors: list[ValidationIssue]
     budget_used: int | None
     budget_remaining: int | None
+
+
+IndicatorValues = Mapping[IndicatorId, float]
+DistrictIndicators = Mapping[DistrictName, IndicatorValues]
+DistrictScores = Mapping[DistrictName, float]
+
+
+@dataclass(frozen=True)
+class TriggeredSynergy:
+    synergy: Synergy
+    district: DistrictName
+
+
+@dataclass(frozen=True)
+class SimulationResult:
+    """Calculated snapshots; invalid scenarios have no simulation or score values."""
+
+    valid: bool
+    validation: ValidationResult
+    budget_used: int | None
+    budget_remaining: int | None
+    indicators_before: DistrictIndicators | None = None
+    indicators_after: DistrictIndicators | None = None
+    district_scores_before: DistrictScores | None = None
+    district_scores_after: DistrictScores | None = None
+    d_avg_before: float | None = None
+    d_avg_after: float | None = None
+    weakest_district_before: DistrictName | None = None
+    weakest_district_after: DistrictName | None = None
+    min_district_score_before: float | None = None
+    min_district_score_after: float | None = None
+    n_crit_before: int | None = None
+    n_crit_after: int | None = None
+    score_before: float | None = None
+    score_after: float | None = None
+    score_delta: float | None = None
+    triggered_synergies: tuple[TriggeredSynergy, ...] = ()
