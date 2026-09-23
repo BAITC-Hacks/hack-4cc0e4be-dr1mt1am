@@ -21,7 +21,7 @@ User selections
 | Structured `SimulationResult` | Carry authoritative before/after scores, district scores, indicator changes, selected initiatives and contributions, budget used/remaining, critical values, and triggered synergies. Define this result model when implementing simulation and scoring; it is not implemented yet. |
 | AI Analyzer / `ai/analyzer.py` | Consume structured calculated output and explain strengths, weaknesses, risks, trade-offs, comparisons, and recommendations. Clearly distinguish facts from analysis and recommendations. |
 | Results UI / `ui/` | Display calculated values and explanations, before/after views, and district comparisons. Round only for presentation. |
-| Domain models / `engine/models.py` | Frozen typed records for districts, initiatives, effects, decisions, synergies, incompatibilities, and indicator metadata. These records do not execute validation or simulation rules. |
+| Domain models / `engine/models.py` | Frozen typed records for districts, initiatives, effects, decisions, synergies, incompatibilities, indicator metadata, and validation issues/results. These records do not execute validation or simulation rules. |
 | Static data / `engine/data.py`, `engine/constants.py` | Hold baseline districts, population shares, indicator weights, initiative catalog, synergies, incompatibilities, and constants exactly as specified. Python modules are authoritative at this stage; `data/` is reserved for possible future file assets. |
 | Tests / `tests/` | Cover validation, simulation, scoring, baseline/reference regressions, and order invariance. |
 
@@ -34,4 +34,4 @@ User selections
 - In a synergy pair, the first initiative is the first member listed in the specification, independent of user selection order.
 - Resolve the specification's scoring clarification before implementing the final Score; preserve the supplied regression targets.
 
-Typed domain models, static data, and data integrity tests are implemented. Validation, simulation, scoring, AI, and UI paths describe future ownership and are not implemented yet.
+Typed domain models, static data, scenario validation, and their tests are implemented. `validate_scenario(decisions: Sequence[Decision]) -> ValidationResult` returns Russian error messages with stable codes, plus budget used/remaining (both `None` for unknown initiative IDs). Repeated selections each count toward cost and direction limits. Errors are deduplicated and sorted by code and message, independent of decision order. Simulation, scoring, AI, and UI paths describe future ownership and are not implemented yet.

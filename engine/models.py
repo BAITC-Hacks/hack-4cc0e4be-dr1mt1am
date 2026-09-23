@@ -1,4 +1,4 @@
-"""Typed domain records. Scenario validation belongs to the future validator."""
+"""Typed domain records. Scenario rules are enforced by engine.validator."""
 
 from dataclasses import dataclass
 from enum import Enum
@@ -92,3 +92,19 @@ class Incompatibility:
     first_initiative_id: InitiativeId
     second_initiative_id: InitiativeId
     scope: IncompatibilityScope
+
+
+@dataclass(frozen=True)
+class ValidationIssue:
+    code: str
+    message: str
+
+
+@dataclass(frozen=True)
+class ValidationResult:
+    """Validation outcome; budget is unknown if any initiative ID is unknown."""
+
+    valid: bool
+    errors: list[ValidationIssue]
+    budget_used: int | None
+    budget_remaining: int | None
